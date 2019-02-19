@@ -1,4 +1,6 @@
 import idaapi 
+import idc
+import idautils
 from PIL import Image
 from PIL.ImageQt import ImageQt
 from collections import OrderedDict
@@ -61,23 +63,25 @@ c = None
 
 def get_string(addr):
     out = ""
-    assem_data = GetDisasm(addr)
-
+    assem_data = idc.GetDisasm(addr)
+    print(addr)
     if "text \"UTF-16LE\"" in assem_data or "unicode 0," in assem_data:
         while True:
-            if Byte(addr) == 0 and Byte(addr+1) == 0:
+
+            if idc.Byte(addr) == 0 and idc.Byte(addr+1) == 0:
                 addr += 2
                 break
             else:
-                out += chr(Byte(addr))
-                out += chr(Byte(addr+1))
+                out += chr(idc.Byte(addr))
+                out += chr(idc.Byte(addr+1))
             addr += 2
         return out.decode("utf-16le"), addr
 
     else:
         while True:
-            if Byte(addr) != 0:
-                out += chr(Byte(addr))
+            if idc.Byte(addr) != 0:
+
+                out += chr(idc.Byte(addr))
             else:
                 addr += 1
                 break
@@ -545,10 +549,10 @@ class Wrapper(idaapi.IDAViewWrapper):
         self.num = num
 
     def OnViewClick(self, px, py, state):
-        widget = pycim_get_tcustom_control(self)
+        widget = idaapi.pycim_get_tcustom_control(self)
         from_mouse = False
 
-        line = get_custom_viewer_curline(widget, from_mouse)
+        line = idaapi.get_custom_viewer_curline(widget, from_mouse)
         line = line[line.find(":")+len(":"):]
         if ida7_version == 1:
             line = binascii.hexlify(line).split("2002")[0]
@@ -597,14 +601,16 @@ class Hyara(idaapi.PluginForm):
         result += "      tool = \"https://github.com/hy00un/Hyara\"\n"
         result += "      version = \"" + "1.8" + "\"\n"
         result += "      date = \"" + time.strftime("%Y-%m-%d") + "\"\n"
-        result += "      MD5 = \"" + GetInputFileMD5() + "\"\n"
+        result += "      MD5 = \"" + idautils.GetInputFileMD5() + "\"\n"
         result += "  strings:\n"
         for name in ruleset_list.keys():
             try:
                 CODE = bytearray.fromhex(ruleset_list[name][0][1:-1].strip().replace("\\x"," "))
+                print(CODE)
+                print(type(CODE))
                 if self.CheckBox1.isChecked():
                     result += "      /*\n"
-                    for i in md.disasm(CODE, 0x1000):
+                    for i in md.disasm(bytes(CODE), 0x1000):
                         byte_data = "".join('{:02X}'.format(x) for x in i.bytes)
                         result += "          %-10s\t%-30s\t\t|%s" % (i.mnemonic.upper(), i.op_str.upper().replace("0X","0x"), byte_data.upper()) + "\n"
                     result += "      */\n"
@@ -616,7 +622,7 @@ class Hyara(idaapi.PluginForm):
                 if self.CheckBox2.isChecked(): # yara wildcard isChecked()
                     opcode = []
                     CODE = bytearray.fromhex(ruleset_list[name][0][1:-1].strip().replace("\\x"," "))
-                    for i in md.disasm(CODE, 0x1000):
+                    for i in md.disasm(bytes(CODE), 0x1000):
                         byte_data = "".join('{:02X}'.format(x) for x in i.bytes)
 
                         if byte_data.startswith("FF"): # ex) ff d7 -> call edi
@@ -870,8 +876,8 @@ class Hyara(idaapi.PluginForm):
         else:
             ByteCode = []
             while start <= end:
-                sub_end = NextHead(start)
-                data = binascii.hexlify(GetManyBytes(start, sub_end-start))
+                sub_end = idc.NextHead(start)
+                data = binascii.hexlify(idc.GetManyBytes(start, sub_end-start))
                 ByteCode.append(data)
                 start = sub_end
 
