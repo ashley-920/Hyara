@@ -1,4 +1,4 @@
-from idaapi import *
+import idaapi 
 from PIL import Image
 from PIL.ImageQt import ImageQt
 from collections import OrderedDict
@@ -140,7 +140,7 @@ class YaraHighlighter(QSyntaxHighlighter):
 
         self.setCurrentBlockState(0)
 
-class YaraIcon(PluginForm):
+class YaraIcon(idaapi.PluginForm):
     def SaveIcon(self, idx):
         global ruleset_list, tableWidget, layout
         data_ = self.img[idx][int(self.LineEdit1.text(),16):int(self.LineEdit1.text(),16) + int(self.LineEdit2.text(),10)]
@@ -269,7 +269,7 @@ class YaraIcon(PluginForm):
     def OnClose(self, form):
         pass
 
-class YaraChecker(PluginForm):
+class YaraChecker(idaapi.PluginForm):
     def choose_path(self):
         path = QFileDialog.getExistingDirectory(
             self.parent,
@@ -430,7 +430,7 @@ class YaraChecker(PluginForm):
     def OnClose(self, form):
         pass
 
-class YaraDetector(PluginForm):
+class YaraDetector(idaapi.PluginForm):
     def choose_path(self):
         path = QFileDialog.getOpenFileName(
             self.parent,
@@ -539,9 +539,9 @@ class YaraDetector(PluginForm):
         pass
 
 ## https://gist.github.com/romainthomas/bce94f1c37215f644e0c
-class Wrapper(IDAViewWrapper):
+class Wrapper(idaapi.IDAViewWrapper):
     def __init__(self, title, num):
-        IDAViewWrapper.__init__(self, title)
+        idaapi.IDAViewWrapper.__init__(self, title)
         self.num = num
 
     def OnViewClick(self, px, py, state):
@@ -562,7 +562,7 @@ class Wrapper(IDAViewWrapper):
         elif self.num == "2":
             EndAddress.setText(line)
 
-class Hyara(PluginForm):
+class Hyara(idaapi.PluginForm):
     def YaraExport(self):
 
         def pretty_hex(data):
@@ -923,7 +923,7 @@ class Hyara(PluginForm):
         if flag == 1:
             c.Unbind()
             flag = 0
-            print("[*] IDAViewWrapper Unbind")
+            print("[*] idaapi.IDAViewWrapper Unbind")
 
         elif num == "1":
             c = Wrapper("IDA View-A", num)
